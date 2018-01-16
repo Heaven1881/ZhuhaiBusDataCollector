@@ -6,10 +6,15 @@ import time
 import json
 
 
+def g_http_get(url):
+    response = urllib2.urlopen(url)
+    return response.read()
+
+
 class BaseDataRequest:
     """数据请求基类"""
 
-    base_url = 'http://www.zhbuswx.com/Handlers/BusQuery.ashx?handlerName=%(handler_name)s&_=%(timestamp)d'
+    baseUrl = 'http://www.zhbuswx.com/Handlers/BusQuery.ashx?handlerName=%(handler_name)s&_=%(timestamp)d'
 
     def __init__(self, external_param, handler_name):
         self.__external_param = external_param
@@ -29,13 +34,22 @@ class BaseDataRequest:
         external_param = {
             'handler_name': self.__handler_name,
             'timestamp': time.time() * 1000
-        }.update(self.__param)
-        external_url = self.base_url + '&' + self.__external_param % external_param
+        }
+        external_param.update(self.__param)
 
-        response = urllib2.urlopen(external_url)
+        external_url = (self.baseUrl + '&' + self.__external_param) % external_param
 
-        self.data = json.loads(response.read())
-        self.data_fetched = True
+        try:
+            self.data = json.loads(g_http_get(external_url))
+            self.data_fetched = True
+
+            if type(self.data) is not dict:
+                raise Exception("Unknown result %s" % self.data)
+
+        except Exception as e:
+            self.data = {}
+            self.data_fetched = False
+            print e.message
 
 
 class BusLineListRequest(BaseDataRequest):
