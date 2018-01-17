@@ -92,3 +92,23 @@ class TestBusLineListRequest(TestBusDataRequest):
         request.fetch_data()
 
         self.assertEqual(self.mock_method_call_count, 2)
+
+
+class TestBusInfoOnRoleRequest(TestBusDataRequest):
+
+    def test_fetch_data(self):
+        """测试基础功能"""
+        self.mock_result = json.dumps({
+            'key': 'value'
+        })
+
+        request = BusDataRequest.BusInfoOnRoad('3A', '九洲港')
+        request.fetch_data()
+
+        self.assertTrue('lineName=3A' in self.passed_args_url)
+        self.assertTrue('fromStation=%E4%B9%9D%E6%B4%B2%E6%B8%AF' in self.passed_args_url)
+        self.assertTrue('handlerName=GetBusListOnRoad' in self.passed_args_url)
+        self.assertEqual(self.mock_method_call_count, 1)
+
+        self.assertTrue('key' in request.data)
+        self.assertTrue(request.data['key'] == 'value')

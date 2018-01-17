@@ -1,6 +1,7 @@
 #!/bin/python
 # coding: utf8
 
+import urllib
 import urllib2
 import time
 import json
@@ -14,10 +15,9 @@ def g_http_get(url):
 class BaseDataRequest:
     """数据请求基类"""
 
-    baseUrl = 'http://www.zhbuswx.com/Handlers/BusQuery.ashx?handlerName=%(handler_name)s&_=%(timestamp)d'
+    baseUrl = 'http://www.zhbuswx.com/Handlers/BusQuery.ashx'
 
-    def __init__(self, external_param, handler_name):
-        self.__external_param = external_param
+    def __init__(self, handler_name):
         self.__handler_name = handler_name
         self.__param = {}
 
@@ -32,12 +32,12 @@ class BaseDataRequest:
             return
 
         external_param = {
-            'handler_name': self.__handler_name,
-            'timestamp': time.time() * 1000
+            'handlerName': self.__handler_name,
+            '_':  int(time.time() * 1000)
         }
         external_param.update(self.__param)
 
-        external_url = (self.baseUrl + '&' + self.__external_param) % external_param
+        external_url = self.baseUrl + '?' + urllib.urlencode(external_param)
 
         try:
             self.data = json.loads(g_http_get(external_url))
@@ -56,11 +56,7 @@ class BusLineListRequest(BaseDataRequest):
     """根据线路名称获取线路信息"""
 
     def __init__(self, key):
-        BaseDataRequest.__init__(
-            self,
-            'key=%(key)s',
-            'GetLineListByLineName'
-        )
+        BaseDataRequest.__init__(self, 'GetLineListByLineName')
         self.set_param({
             'key': key
 
@@ -71,11 +67,18 @@ class BusStationListRequest(BaseDataRequest):
     """根据线路ID获取站点信息"""
 
     def __init__(self, line_id):
-        BaseDataRequest.__init__(
-            self,
-            'lineId=%(line_id)s',
-            'GetStationList'
-        )
+        BaseDataRequest.__init__(self, 'GetStationList')
         self.set_param({
-            'line_id': line_id
+            'lineId': line_id
+        })
+
+
+class BusInfoOnRoad(BaseDataRequest):
+    """获取指定线路路上巴士的信息"""
+
+    def __init__(self, line_name, from_station):
+        BaseDataRequest.__init__(self, 'GetBusListOnRoad')
+        self.set_param({
+            'lineName': line_name,
+            'fromStation': from_station
         })
