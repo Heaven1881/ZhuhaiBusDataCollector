@@ -23,6 +23,7 @@ class BaseDataRequest:
 
         self.data_fetched = False
         self.data = {}
+        self.last_exception = None
 
     def set_param(self, param):
         self.__param = param
@@ -40,6 +41,8 @@ class BaseDataRequest:
         external_url = self.baseUrl + '?' + urllib.urlencode(external_param)
 
         try:
+            self.last_exception = None
+
             self.data = json.loads(g_http_get(external_url))
             self.data_fetched = True
 
@@ -49,7 +52,7 @@ class BaseDataRequest:
         except Exception as e:
             self.data = {}
             self.data_fetched = False
-            print e.message
+            self.last_exception = e
 
 
 class BusLineListRequest(BaseDataRequest):
