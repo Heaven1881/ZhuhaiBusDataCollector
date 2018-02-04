@@ -2,12 +2,19 @@
   "output_dir": "./output",
   "output_filename": "%(line_name)s-%(direction)s-%(date)s-%(bus_id)s.csv",
   "request_interval": 60,
+  "logfile": "./log/event.log",
   "line_info_list": [
     {
-      "line_name": "3",
-      "line_id": "7cb4cfe6-fb21-43da-abe3-ba5ee9cfea5e",
-      "from_station": "金鼎工业园",
+      "line_name": "3A",
+      "line_id": "a6231ab9-99af-4eba-914c-8104fd9aad3a",
+      "from_station": "城轨珠海北站",
       "direction": "1"
+    },
+    {
+      "line_name": "3A",
+      "line_id": "98eb0b59-bf91-4f4d-a504-28f7ae129c46",
+      "from_station": "九洲港",
+      "direction": "2"
     }
   ]
 }

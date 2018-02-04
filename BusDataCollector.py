@@ -1,14 +1,10 @@
 #!/bin/python
 # coding:utf8
-
+import logging
 import os
 import time
-import json
-import signal
 import datetime
 import traceback
-
-import collections
 
 import BusDataRequest
 
@@ -50,6 +46,8 @@ class BusDataCollector:
         self.current_time = 0
         self.__last_station = {}
 
+        self.logger = logging.getLogger()
+
     def tick(self):
         request_interval = self.config['request_interval']
         line_info_list = self.config['line_info_list']
@@ -72,11 +70,19 @@ class BusDataCollector:
             if request.data_fetched:
                 # 成功取到数据，检查并写入
                 self.__consume_data(line_info, request.data)
+        except KeyError as e:
+            self.logger.error('Fail when fetching data from network: %s [line_name=%s] [data=%s]', repr(e),
+                              line_info['line_name'], request.data)
+            self.is_running = False
         except Exception as e:
-            print repr(e)
-            print traceback.print_exc()
+            self.logger.exception('Fail when fetching data from network: %s [line_name=%s]', repr(e),
+                                  line_info['line_name'])
+            self.is_running = False
 
     def __consume_data(self, line_info, data):
+        if 'data' not in data:
+            return
+
         for bus_info in data['data']:
             cur_datetime = datetime.datetime.fromtimestamp(self.current_time)
             bus_id = bus_info['BusNumber']
@@ -107,37 +113,3 @@ class BusDataCollector:
             self.current_time = time.time()
             self.tick()
             time.sleep(0.1)
-
-
-def g_convert(data):
-    if isinstance(data, unicode):
-        return data.encode('utf8')
-    elif isinstance(data, basestring):
-        return str(data)
-    elif isinstance(data, collections.Mapping):
-        return dict(map(g_convert, data.iteritems()))
-    elif isinstance(data, collections.Iterable):
-        return type(data)(map(g_convert, data))
-    else:
-        return data
-
-
-if __name__ == '__main__':
-    CONFIG_PATH = './config.json'
-    config = {}
-    with open(CONFIG_PATH, 'r') as f:
-        config = g_convert(json.load(f))
-
-    collector = BusDataCollector(config)
-
-
-    def signal_handler(signal, frame):
-        print 'Ctrl C'
-        collector.is_running = False
-
-
-    signal.signal(signal.SIGINT, signal_handler)
-
-    collector.run()
-
-    print 'Stop'
